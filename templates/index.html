@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShieldLens — Cybersecurity Prioritization SOC Dashboard</title>
+
+    <!-- FontAwesome & Custom CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- TOP NAVIGATION BAR -->
+        <header class="navbar">
+            <div class="nav-brand">
+                <i class="fa-solid fa-shield-halved logo-icon"></i>
+                <div class="brand-text">
+                    <span class="brand-name">ShieldLens</span>
+                    <span class="brand-tagline">Deterministic Vulnerability Prioritization & Decision Intelligence</span>
+                </div>
+            </div>
+
+            <div class="nav-status">
+                <span class="status-chip chip-engine"><i class="fa-solid fa-gears"></i> Deterministic Engine: Active</span>
+                <span class="status-chip chip-ai" id="featherless-status"><i class="fa-solid fa-brain"></i> AI Explainer: Active</span>
+            </div>
+        </header>
+
+        <!-- DASHBOARD TAB NAVIGATION -->
+        <nav class="tab-navigation">
+            <button class="tab-btn active" onclick="switchTab('prioritization')">
+                <i class="fa-solid fa-list-check"></i> Production Prioritization
+            </button>
+            <button class="tab-btn" onclick="switchTab('intelligence')">
+                <i class="fa-solid fa-sliders"></i> Simulator & Stability
+            </button>
+            <button class="tab-btn" onclick="switchTab('verification')">
+                <i class="fa-solid fa-clipboard-check"></i> Verification Queue
+            </button>
+            <button class="tab-btn" onclick="switchTab('benchmark')">
+                <i class="fa-solid fa-chart-line"></i> Benchmark Evaluation
+            </button>
+        </nav>
+
+        <!-- MAIN DASHBOARD CONTENT CONTAINER -->
+        <main class="main-content">
+
+            <!-- SECTION 1: PRODUCTION PRIORITIZATION & TRACE -->
+            <div id="section-prioritization" class="tab-section active">
+                <div class="grid-layout">
+                    
+                    <!-- Left Sidebar: Organization Selector & Profile Info -->
+                    <aside class="panel profile-panel">
+                        <div class="panel-header">
+                            <h3><i class="fa-solid fa-building"></i> Organization Context</h3>
+                        </div>
+                        <div class="panel-body">
+                            <label for="org-select" class="form-label">Select Organization Profile:</label>
+                            <select id="org-select" class="form-control" onchange="onOrganizationChange(this.value)">
+                                <option value="" disabled selected>Loading organizations...</option>
+                            </select>
+
+                            <div id="profile-details-card" class="profile-card">
+                                <h4 id="prof-name">--</h4>
+                                <div class="prof-meta">Sector: <span id="prof-sector">--</span> &bull; Risk Appetite: <span id="prof-risk">--</span></div>
+                                
+                                <div class="card-divider"></div>
+
+                                <h5><i class="fa-solid fa-scale-balanced"></i> Risk Weight Modifiers</h5>
+                                <div class="weight-grid">
+                                    <div class="weight-item">
+                                        <span class="w-label">CVSS Base</span>
+                                        <span id="w-cvss" class="w-val">0.0</span>
+                                    </div>
+                                    <div class="weight-item">
+                                        <span class="w-label">CISA KEV</span>
+                                        <span id="w-kev" class="w-val">0.0</span>
+                                    </div>
+                                    <div class="weight-item">
+                                        <span class="w-label">FIRST EPSS</span>
+                                        <span id="w-epss" class="w-val">0.0</span>
+                                    </div>
+                                </div>
+
+                                <div class="card-divider"></div>
+
+                                <h5><i class="fa-solid fa-box-archive"></i> Mission-Critical Products</h5>
+                                <ul id="prof-products-list" class="products-list">
+                                </ul>
+                            </div>
+
+                            <div class="card-divider"></div>
+
+                            <!-- WHY SHIELDLENS? DIFFERENTIATOR CARD -->
+                            <div class="why-shieldlens-box">
+                                <h5><i class="fa-solid fa-shield-halved text-primary"></i> Why ShieldLens?</h5>
+                                <p class="why-motto"><em>"AI explains. Deterministic security logic decides."</em></p>
+                                <ul class="why-list">
+                                    <li><i class="fa-solid fa-check text-success"></i> Context-Aware Technology Matching</li>
+                                    <li><i class="fa-solid fa-check text-success"></i> Evidence-Aware Vulnerability Validation</li>
+                                    <li><i class="fa-solid fa-check text-success"></i> Deterministic Risk Prioritization</li>
+                                    <li><i class="fa-solid fa-check text-success"></i> Organization-Specific Ranking</li>
+                                    <li><i class="fa-solid fa-check text-success"></i> What-If Risk Simulation</li>
+                                    <li><i class="fa-solid fa-check text-success"></i> Decision Stability Analysis</li>
+                                    <li><i class="fa-solid fa-check text-success"></i> Benchmark Evaluation</li>
+                                    <li><i class="fa-solid fa-check text-success"></i> AI-Assisted Analyst Explanation</li>
+                                </ul>
+                            </div>
+
+                        </div>
+                    </aside>
+
+                    <!-- Right Panel: Top-5 Vulnerability Candidates -->
+                    <section class="panel ranking-panel">
+                        <div class="panel-header flex-between">
+                            <h3><i class="fa-solid fa-fire-flame-curated"></i> Top-5 Prioritized Vulnerabilities</h3>
+                            <span id="eligible-count-badge" class="count-badge">0 eligible vulnerabilities found</span>
+                        </div>
+                        <div class="panel-body">
+                            <div id="ranking-cards-container" class="ranking-cards-list">
+                                <div class="empty-state">
+                                    <i class="fa-solid fa-arrow-left"></i> Select an organization profile to analyze vulnerabilities.
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- SELECTED VULNERABILITY DETAIL & DECISION TRACE DRAWER -->
+                <div id="detail-drawer" class="detail-drawer hidden">
+                    <div class="drawer-header flex-between">
+                        <h4><i class="fa-solid fa-magnifying-glass-chart"></i> Vulnerability Analysis & Decision Trace: <span id="dtl-cve">--</span></h4>
+                        <button class="close-btn" onclick="closeDetailDrawer()">&times;</button>
+                    </div>
+
+                    <!-- TRACE STEP FLOW HEADER -->
+                    <div class="trace-flow-banner">
+                        <span class="step-chip"><i class="fa-solid fa-building"></i> CONTEXT</span>
+                        <i class="fa-solid fa-chevron-right arrow"></i>
+                        <span class="step-chip"><i class="fa-solid fa-shield"></i> EVIDENCE</span>
+                        <i class="fa-solid fa-chevron-right arrow"></i>
+                        <span class="step-chip"><i class="fa-solid fa-calculator"></i> SCORE</span>
+                        <i class="fa-solid fa-chevron-right arrow"></i>
+                        <span class="step-chip"><i class="fa-solid fa-gavel"></i> DECISION</span>
+                        <i class="fa-solid fa-chevron-right arrow"></i>
+                        <span class="step-chip step-ai"><i class="fa-solid fa-wand-magic-sparkles"></i> AI EXPLANATION</span>
+                    </div>
+
+                    <div class="drawer-body grid-2col">
+                        <!-- Left: Deterministic Security Result -->
+                        <div class="detail-block deterministic-block">
+                            <div class="flex-between block-header-badge">
+                                <h5><i class="fa-solid fa-calculator"></i> Decision Trace</h5>
+                                <span class="badge-deterministic"><i class="fa-solid fa-lock"></i> DETERMINISTIC SECURITY RESULT</span>
+                            </div>
+
+                            <!-- A. TECHNOLOGY CONTEXT -->
+                            <div class="trace-card">
+                                <div class="trace-card-title"><i class="fa-solid fa-microchip"></i> A. TECHNOLOGY CONTEXT</div>
+                                <div class="trace-row"><span>Organization:</span> <strong id="dtl-org-name">--</strong> (<span id="dtl-org-id">--</span>)</div>
+                                <div class="trace-row"><span>Target Product:</span> <strong id="dtl-product">--</strong></div>
+                                <div class="trace-row"><span>Critical Profile Match:</span> <span class="text-success"><i class="fa-solid fa-circle-check"></i> Critical product match</span></div>
+                                <div class="trace-row"><span>Evidence Status:</span> <span id="dtl-evidence-badge" class="badge-evidence">--</span></div>
+                            </div>
+
+                            <!-- B. SECURITY EVIDENCE -->
+                            <div class="trace-card">
+                                <div class="trace-card-title"><i class="fa-solid fa-shield-virus"></i> B. SECURITY EVIDENCE</div>
+                                <div class="evidence-grid">
+                                    <div class="ev-item"><span class="ev-lbl">CVSS Base</span><strong id="dtl-cvss-raw">--</strong></div>
+                                    <div class="ev-item"><span class="ev-lbl">CISA KEV</span><strong id="dtl-kev-raw">--</strong></div>
+                                    <div class="ev-item"><span class="ev-lbl">FIRST EPSS</span><strong id="dtl-epss-raw">--</strong></div>
+                                    <div class="ev-item"><span class="ev-lbl">Affected Version</span><strong id="dtl-ver-raw" class="text-warning">NEEDS VERIFICATION</strong></div>
+                                </div>
+                            </div>
+
+                            <!-- C. ORGANIZATION PROFILE -->
+                            <div class="trace-card">
+                                <div class="trace-card-title"><i class="fa-solid fa-scale-balanced"></i> C. ORGANIZATION PROFILE (<span id="dtl-prof-name">--</span>)</div>
+                                <div class="weight-grid">
+                                    <div class="weight-item"><span class="w-label">CVSS Weight</span><span id="dtl-w-cvss" class="w-val">--</span></div>
+                                    <div class="weight-item"><span class="w-label">KEV Weight</span><span id="dtl-w-kev" class="w-val">--</span></div>
+                                    <div class="weight-item"><span class="w-label">EPSS Weight</span><span id="dtl-w-epss" class="w-val">--</span></div>
+                                </div>
+                            </div>
+
+                            <!-- D. DETERMINISTIC SCORE BREAKDOWN -->
+                            <div class="trace-card">
+                                <div class="trace-card-title"><i class="fa-solid fa-chart-simple"></i> D. DETERMINISTIC SCORE BREAKDOWN</div>
+                                <div class="breakdown-bars">
+                                    <div class="bar-group">
+                                        <div class="bar-label flex-between"><span>CVSS Contribution</span><span id="dtl-cvss-contrib">0.0000</span></div>
+                                        <div class="progress-bg"><div id="dtl-cvss-bar" class="progress-fill bg-cvss" style="width: 0%;"></div></div>
+                                    </div>
+                                    <div class="bar-group">
+                                        <div class="bar-label flex-between"><span>CISA KEV Contribution</span><span id="dtl-kev-contrib">0.0000</span></div>
+                                        <div class="progress-bg"><div id="dtl-kev-bar" class="progress-fill bg-kev" style="width: 0%;"></div></div>
+                                    </div>
+                                    <div class="bar-group">
+                                        <div class="bar-label flex-between"><span>FIRST EPSS Contribution</span><span id="dtl-epss-contrib">0.0000</span></div>
+                                        <div class="progress-bg"><div id="dtl-epss-bar" class="progress-fill bg-epss" style="width: 0%;"></div></div>
+                                    </div>
+                                </div>
+
+                                <div class="score-summary-box" style="margin-top:0.75rem;">
+                                    <div class="final-score-display">
+                                        <span class="score-num" id="dtl-score">0.0000</span>
+                                        <span class="score-lbl badge-priority" id="dtl-priority">CRITICAL</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- E. DECISION -->
+                            <div class="trace-card decision-box">
+                                <div class="trace-card-title"><i class="fa-solid fa-gavel"></i> E. DECISION</div>
+                                <div class="decision-badge" id="dtl-rank-badge">#1 PRIORITY</div>
+                                <p id="dtl-reason" class="decision-text">--</p>
+                            </div>
+                        </div>
+
+                        <!-- Right: AI-Generated Explanation (Non-Authoritative) -->
+                        <div class="detail-block ai-block">
+                            <div class="flex-between block-header-badge">
+                                <h5><i class="fa-solid fa-robot"></i> Explain with AI</h5>
+                                <span class="badge-ai-header"><i class="fa-solid fa-wand-magic-sparkles"></i> AI-GENERATED EXPLANATION</span>
+                            </div>
+
+                            <div class="ai-banner-disclaimer">
+                                <i class="fa-solid fa-info-circle"></i>
+                                <span><strong>NON-AUTHORITATIVE:</strong> AI explains the security decision calculated by the deterministic engine. AI does not determine the risk score or ranking.</span>
+                            </div>
+
+                            <div class="btn-group" style="margin-top:0.85rem;">
+                                <button id="ai-explain-btn" class="btn btn-ai" onclick="requestAiExplanation()">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Explain
+                                </button>
+                                <button id="ai-audit-btn" class="btn btn-audit" onclick="requestAiAudit()">
+                                    <i class="fa-solid fa-user-shield"></i> AI Decision Audit
+                                </button>
+                            </div>
+
+                            <div id="ai-explanation-content" class="ai-content-box">
+                                <p class="placeholder-text"><i class="fa-solid fa-circle-info"></i> Click <strong>Explain</strong> or <strong>AI Decision Audit</strong> to generate natural language guidance.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- SECTION 2: SIMULATOR & DECISION STABILITY -->
+            <div id="section-intelligence" class="tab-section hidden">
+                <div class="grid-layout">
+                    
+                    <!-- Left: Risk What-If Simulator -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3><i class="fa-solid fa-sliders"></i> Risk What-If Simulator</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="alert-banner sim-banner">
+                                <i class="fa-solid fa-flask"></i>
+                                <span><strong>SIMULATION</strong> — does not modify official production results</span>
+                            </div>
+
+                            <div class="sim-sliders">
+                                <div class="sim-group">
+                                    <div class="flex-between">
+                                        <label>CVSS Weight</label>
+                                        <span id="sim-cvss-val">0.33</span>
+                                    </div>
+                                    <input type="range" id="sim-cvss" min="0" max="1" step="0.05" value="0.33" oninput="updateSimSliders()">
+                                </div>
+
+                                <div class="sim-group">
+                                    <div class="flex-between">
+                                        <label>CISA KEV Weight</label>
+                                        <span id="sim-kev-val">0.33</span>
+                                    </div>
+                                    <input type="range" id="sim-kev" min="0" max="1" step="0.05" value="0.33" oninput="updateSimSliders()">
+                                </div>
+
+                                <div class="sim-group">
+                                    <div class="flex-between">
+                                        <label>FIRST EPSS Weight</label>
+                                        <span id="sim-epss-val">0.34</span>
+                                    </div>
+                                    <input type="range" id="sim-epss" min="0" max="1" step="0.05" value="0.34" oninput="updateSimSliders()">
+                                </div>
+
+                                <div class="flex-between sum-row">
+                                    <span>Total Weight Sum:</span>
+                                    <strong id="sim-sum-val">1.00</strong>
+                                </div>
+
+                                <button class="btn btn-primary btn-block" onclick="runSimulation()">
+                                    <i class="fa-solid fa-play"></i> Run What-If Simulation
+                                </button>
+                            </div>
+
+                            <div id="sim-results-box" class="sim-table-container">
+                                <p class="placeholder-text">Adjust sliders and click Run What-If Simulation.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Decision Stability Analysis -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3><i class="fa-solid fa-chart-radar"></i> Decision Stability Analysis</h3>
+                        </div>
+                        <div class="panel-body">
+                            <p class="section-desc">Evaluates rank invariance across 5 deterministic scenario weight profiles (Current, CVSS-Heavy, KEV-Heavy, EPSS-Heavy, Balanced).</p>
+                            <div id="stability-cards-container" class="stability-grid">
+                                <p class="placeholder-text"><i class="fa-solid fa-spinner fa-spin"></i> Loading decision stability analysis...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- SECTION 3: VERIFICATION QUEUE -->
+            <div id="section-verification" class="tab-section hidden">
+                <div class="panel">
+                    <div class="panel-header flex-between">
+                        <h3><i class="fa-solid fa-clipboard-check"></i> Analyst Verification Queue</h3>
+                        <span id="queue-count-badge" class="count-badge">0 vulnerabilities require verification</span>
+                    </div>
+                    <div class="panel-body">
+                        <div class="alert-banner info-banner">
+                            <i class="fa-solid fa-triangle-exclamation banner-icon"></i>
+                            <div>
+                                <strong>Honest Evidence Handling:</strong>
+                                <span>The official dataset does not supply explicit affected-version ranges. Items matching technology context are retained as <code>NEEDS_VERIFICATION</code> for manual asset confirmation before patching.</span>
+                            </div>
+                        </div>
+
+                        <div id="verification-queue-container" class="queue-list">
+                            <p class="placeholder-text"><i class="fa-solid fa-spinner fa-spin"></i> Loading verification queue...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 4: BENCHMARK EVALUATION -->
+            <div id="section-benchmark" class="tab-section hidden">
+                <div class="benchmark-container">
+                    <div class="alert-banner info-banner">
+                        <i class="fa-solid fa-circle-info banner-icon"></i>
+                        <div>
+                            <strong>Organization-Aware Benchmark Evaluation</strong>
+                            <span>Measures production ranking agreement against practitioner ground truth strictly within the organization's eligible candidate set. Practitioner ranks never influence production scoring.</span>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3 id="eval-org-title">Organization Evaluation Results</h3>
+                        </div>
+                        <div class="panel-body">
+                            <h4 class="section-subtitle"><i class="fa-solid fa-award"></i> ORGANIZATION-RELATIVE BENCHMARK</h4>
+                            <div class="metrics-grid">
+                                <div class="metric-card">
+                                    <span id="m-eligible" class="m-val">0</span>
+                                    <span class="m-lbl">Eligible Candidates</span>
+                                </div>
+                                <div class="metric-card">
+                                    <span id="m-top1" class="m-val">--</span>
+                                    <span class="m-lbl">Relative Top-1 Agreement</span>
+                                </div>
+                                <div class="metric-card">
+                                    <span id="m-top3" class="m-val">--</span>
+                                    <span class="m-lbl">Relative Top-3 Overlap</span>
+                                </div>
+                                <div class="metric-card">
+                                    <span id="m-top5" class="m-val">--</span>
+                                    <span class="m-lbl">Relative Top-5 Overlap</span>
+                                </div>
+                            </div>
+
+                            <div class="metrics-grid grid-3" style="margin-top: 1rem;">
+                                <div class="metric-card">
+                                    <span id="m-prec" class="m-val">--</span>
+                                    <span class="m-lbl">Precision@5</span>
+                                </div>
+                                <div class="metric-card">
+                                    <span id="m-rec" class="m-val">--</span>
+                                    <span class="m-lbl">Recall@5</span>
+                                </div>
+                                <div class="metric-card">
+                                    <span id="m-spearman" class="m-val">--</span>
+                                    <span class="m-lbl">Spearman Correlation (&rho;)</span>
+                                </div>
+                            </div>
+
+                            <div class="card-divider" style="margin: 1.5rem 0;"></div>
+
+                            <h4 class="section-subtitle"><i class="fa-solid fa-globe"></i> GLOBAL SECONDARY DIAGNOSTICS</h4>
+                            <div class="metrics-grid grid-3">
+                                <div class="metric-card sub-card">
+                                    <span id="gm-top1" class="m-val">--</span>
+                                    <span class="m-lbl">Global Top-1 Match</span>
+                                </div>
+                                <div class="metric-card sub-card">
+                                    <span id="gm-top3" class="m-val">--</span>
+                                    <span class="m-lbl">Global Top-3 Overlap</span>
+                                </div>
+                                <div class="metric-card sub-card">
+                                    <span id="gm-top5" class="m-val">--</span>
+                                    <span class="m-lbl">Global Top-5 Overlap</span>
+                                </div>
+                            </div>
+
+                            <p class="eval-notes" id="eval-notes-text">Loading benchmark evaluation details...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- VERIFICATION ACTION MODAL -->
+    <div id="verification-modal" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header flex-between">
+                <h4><i class="fa-solid fa-clipboard-question"></i> Analyst Action Requirements</h4>
+                <button class="close-btn" onclick="closeQueueModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App JavaScript -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
